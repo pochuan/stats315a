@@ -8,7 +8,10 @@ cv.error <- function(model.fn, formula, num.folds, train.data) {
   fold.begin <- 1; fold.end <- floor(N/num.folds);
   for (i in 1:num.folds) {
     # train model on all-but-i^th fold
-    model.i <- model.fn(formula, train.data[-(fold.begin:fold.end),]);
+    model.i <- ifelse(identical(model.fn,glmnet),
+                      model.fn(formula,family="gaussian",weights = rep(1,nrow(train.data[-(fold.begin:fold.end),1:12])),x=train.data[-(fold.begin:fold.end),1:12], y = train.data[-(fold.begin:fold.end),]$quality),
+                      model.fn(formula, train.data[-(fold.begin:fold.end),]));
+    
     # add in i^th fold training error
     predict.i <- predict(model.i, train.data[fold.begin:fold.end,1:12]);
     if (class(predict.i) == "list") {
@@ -32,6 +35,7 @@ cv.error <- function(model.fn, formula, num.folds, train.data) {
 # LDA/QDA
 # kNN
 # regularization? maybe LASSO for variable selection? or, forward step-wise with AIC?
+# Trees
 
 # uncomment the following to test ordinary linear model, LDA respectively
 # cv.error(lm, quality ~ ., 10, wine.train)
